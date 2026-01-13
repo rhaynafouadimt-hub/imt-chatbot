@@ -1,0 +1,4 @@
+Contact
+
+Nous utilisons également différents services externes comme Google Webfonts, Google Maps, autres hébergeurs de vidéo. Depuis que ces FAI sont susceptibles de collecter des données personnelles comme votre adresse IP nous vous permettons de les bloquer ici. merci de prendre conscience que cela peut hautement réduire certaines fonctionnalités de notre site. Les changement seront appliqués après rechargement de la page.
+

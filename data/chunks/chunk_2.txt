@@ -1,0 +1,28 @@
+Cochez pour activer le masquage permanent de la barre d’acceptation / refus des cookies si vous ne les acceptez pas. 2 cookies seront nécessaires pour mémoriser ce choix. Sans quoi le message apparaitrait à nouveau à chaque page ou fenêtre.
+Cliquer pour autoriser / refuser les cookies essentiels au site.
+Cookies Google Analytics
+Ces cookies collectent des in de manière compilée pour nous aider à comprendre comment notre site est utilisé et combien son performantes nos actions marketing, ou pour nous aider à personnaliser notre site afin d’améliorer votre expérience de navigation.
+Si vous ne souhaitez pas que votre visite soit pistée sur notre site vous pouvez bloquer ce pistage dans votre navigateur ici :
+Cliquer pour autoriser / refuser le tracking Google Analytics.
+Autres services externes
+Nous utilisons également différents services externes comme Google Webfonts, Google Maps, autres hébergeurs de vidéo. Depuis que ces FAI sont susceptibles de collecter des données personnelles comme votre adresse IP nous vous permettons de les bloquer ici. merci de prendre conscience que cela peut hautement réduire certaines fonctionnalités de notre site. Les changement seront appliqués après rechargement de la page.
+Réglages des polices Google :
+Cliquer pour activer/désactiver les polices Google Fonts.
+Réglages Google Map :
+Cliquer pour activer/désactiver Google maps.
+Réglages reCAPTCHA :
+Cliquer pour activer/désactiver Google reCaptcha.
+Intégrations de vidéo Vimeo et Youtube :
+Cliquez pour activer/désactiver l’incorporation de vidéos.
+Autres cookies
+Les cookies suivants sont également requis - Vous pouvez choisir d’autoriser leur utilisation :
+Cliquer pour activer/désactiver _ga - Cookie Google Analytics.
+Cliquer pour activer/désactiver _gid - Cookie Google Analytics.
+Cliquer pour activer/désactiver _gat_* - Cookie Google Analytics.
+Politique de Confidentialité
+Vous pouvez lire plus de détails à propos des cookies et des paramètres de confidentialité sur notre Page Mentions Légales.
+Accepter
+Refuser
+Ouvrir la barre de message
+Ouvrir la barre de message
+Ouvrir la barre de message
