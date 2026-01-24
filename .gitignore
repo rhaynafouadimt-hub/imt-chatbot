@@ -1,0 +1,14 @@
+# Environnements virtuels
+venv/
+../venv/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# Chainlit
+.chainlit/
+../.chainlit/
+
+# Fichiers système
+.DS_Store
