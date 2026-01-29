@@ -1,0 +1,38 @@
+# ========== CORE LLM & LANGCHAIN ==========
+langchain
+langchain-google-genai
+langchain-community
+langchain-openai
+
+# ========== LLM PROVIDERS ==========
+google-generativeai    # Pour Gemini
+openai                 # Pour Grok (optionnel)
+
+# ========== MONITORING & OBSERVABILITY ==========
+langfuse               # Pour le tracing (ta tâche #3)
+
+# ========== VECTOR STORE & EMBEDDINGS ==========
+chromadb
+sentence-transformers  # Embeddings locaux
+
+# ========== DATABASE & MEMORY ==========
+redis                  # Mémoire conversationnelle              # Inclus dans Python
+
+# ========== WEB & SCRAPING ==========
+beautifulsoup4         # Pour le scraping (équipe RAG)
+requests
+aiohttp                # Pour async
+
+# ========== INTERFACE ==========
+chainlit               # Interface web (ton ami)
+
+# ========== UTILITIES ==========
+python-dotenv
+pydantic               # Déjà dans langchain
+tenacity               # Pour les retries
+tiktoken               # Comptage de tokens
+
+# ========== DEVELOPMENT & TESTING ==========
+pytest
+pytest-asyncio
+black                  # Formattage
