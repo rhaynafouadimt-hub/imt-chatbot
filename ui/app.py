@@ -1,12 +1,14 @@
 import chainlit as cl
+from components.starter_menu import get_starters
 
 
-@cl.on_chat_start
-async def start():
+@cl.set_starters
+async def starters():
+    return get_starters()
+
+
+@cl.on_message
+async def on_message(message: cl.Message):
     await cl.Message(
-        content=(
-            "👋 **Bienvenue sur l’assistant IMT**\n\n"
-            "Je suis là pour vous fournir des informations "
-            "sur l’Institut des Métiers du Tertiaire."
-        )
+        content="🧠 Traitement en cours…"
     ).send()
