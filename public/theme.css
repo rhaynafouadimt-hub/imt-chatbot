@@ -1,0 +1,33 @@
+body {
+  background: linear-gradient(180deg, #020617, #0f172a);
+  font-family: Inter, system-ui, sans-serif;
+  color: #e5e7eb;
+}
+
+.cl-chat {
+  max-width: 1100px;
+  margin: auto;
+}
+
+.cl-message {
+  border-radius: 18px;
+  padding: 14px 18px;
+  font-size: 15px;
+}
+
+.cl-user-message {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  margin-left: auto;
+}
+
+.cl-assistant-message {
+  background: #020617;
+  border: 1px solid #1e293b;
+}
+
+.cl-input-container {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 22px;
+}
