@@ -1,30 +1,60 @@
 import requests
 from bs4 import BeautifulSoup
-import os
+from urllib.parse import urljoin, urlparse
 
-# URL du site IMT
-URL = "https://www.imt.sn/"
+BASE_URL = "https://www.imt.sn"
 
-# Dossier de sortie
-OUTPUT_DIR = "data"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-def scrape_imt():
-    response = requests.get(URL)
-    response.encoding = "utf-8"
-
+def get_internal_links():
+    response = requests.get(BASE_URL, timeout=10)
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # Récupérer tout le texte visible
-    texts = soup.stripped_strings
+    links = set()
 
-    content = "\n".join(texts)
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        full_url = urljoin(BASE_URL, href)
 
-    # Sauvegarde dans un fichier texte
-    with open(os.path.join(OUTPUT_DIR, "imt_content.txt"), "w", encoding="utf-8") as f:
-        f.write(content)
+        # garder seulement les liens du site IMT
+        if urlparse(full_url).netloc == urlparse(BASE_URL).netloc:
+            links.add(full_url)
 
-    print("✅ Scraping terminé : imt_content.txt créé")
+    return list(links)
+
+
+def scrape_page(url):
+    response = requests.get(url, timeout=10)
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # supprimer les parties inutiles
+    for tag in soup(["script", "style", "nav", "footer", "header"]):
+        tag.decompose()
+
+    text = soup.get_text(separator=" ")
+    text = " ".join(text.split())
+
+    return text
+
+
+def scrape_site():
+    all_texts = []
+    links = get_internal_links()
+
+    print(f"🔍 {len(links)} pages trouvées")
+
+    for link in links:
+        try:
+            text = scrape_page(link)
+            if len(text) > 300:
+                all_texts.append(text)
+        except Exception as e:
+            print(f"❌ Erreur sur {link}")
+
+    return all_texts
+
 
 if __name__ == "__main__":
-    scrape_imt()
+    data = scrape_site()
+    print(f"✅ Pages scrapées : {len(data)}")
+
+    print(data[0][:500])
+
