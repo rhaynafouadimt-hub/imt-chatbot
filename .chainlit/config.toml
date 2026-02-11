@@ -91,14 +91,13 @@ reaction_on_message_received = false
     allowed_executables = [ "npx", "uvx" ]
 
 [UI]
+# Nom de l'application
 name = "IMT Chatbot"
-description = "Assistant officiel IMT – Dakar"
-custom_css = "/public/theme.css"
 default_theme = "dark"
-logo_file_url = "/public/images/imt.jpg"
+custom_css = "public/theme.css"
 
-
-
+# Un seul fichier JS qui charge tous les autres dans le bon ordre
+custom_js = "public/loader.js"
 
 [meta]
 generated_by = "2.9.6"
