@@ -1,6 +1,6 @@
 """
 Monitoring, tracing et observabilité pour le chatbot IMT.
-Intégration avec Langfuse pour le suivi des coûts et performances.
+Intégration avec Langfuse 3.13.0 + OpenTelemetry pour le suivi des coûts et performances.
 """
 
 import time
@@ -75,14 +75,13 @@ class LocalMonitor:
     
     def end_trace(self, trace_id: str, output_data: Dict = None, 
                   error: str = None, tokens: int = None, cost: float = None,
-                  duration_ms: float = None): # Recemment ajoutés pour geré la durée
+                  duration_ms: float = None):
         """Termine une trace avec les résultats."""
         for trace in self.traces:
             if trace.event_id == trace_id:
-                if duration_ms is not None: # Utilise la duration ms si fournie
+                if duration_ms is not None:
                     trace.duration_ms = duration_ms
                 else:
-                    # Ajout récent pour calculer la durée
                     trace.duration_ms = (datetime.now() - trace.timestamp).total_seconds() * 1000
                     
                 trace.output_data = output_data
@@ -111,16 +110,9 @@ class LocalMonitor:
     def log_llm_response(self, response: Any, duration_ms: float, prompt: str = ""):
         """
         Log une réponse LLM depuis un objet LLMResponse.
-    
-        Args:
-            response: Objet LLMResponse (de llm.py)
-            duration_ms: Durée en millisecondes
-            prompt: Prompt original (optionnel)
         """
         try:
-            # Extraire les infos selon le type de réponse
             if hasattr(response, 'text') and hasattr(response, 'model'):
-                # C'est un LLMResponse de llm.py
                 text = response.text
                 model = response.model
                 tokens = 0
@@ -141,7 +133,6 @@ class LocalMonitor:
                 )
             
             elif isinstance(response, str):
-                # Réponse simple (texte)
                 self.log_llm_call(
                     prompt=prompt[:200] + "..." if len(prompt) > 200 else prompt,
                     response=response[:200] + "..." if len(response) > 200 else response,
@@ -152,7 +143,6 @@ class LocalMonitor:
             
         except Exception as e:
             logger.error(f"❌ Erreur logging LLMResponse: {e}")
-            # Fallback basique
             self.log_llm_call(
                 prompt=prompt[:100] if prompt else "",
                 response=str(response)[:100],
@@ -194,11 +184,11 @@ class LocalMonitor:
     def _estimate_cost(self, model: str, tokens: int) -> float:
         """Estime le coût d'un appel LLM."""
         cost_per_token = {
-            "gemini-2.5-flash": 0.000075 / 1000,  # $0.075/1K tokens input
-            "gemini-2.5-pro": 0.0035 / 1000,      # $3.50/1K tokens input
-            "grok-beta": 0.0,                     # Gratuit actuellement
-            "mistral": 0.0,                       # Local = gratuit
-            "llama2": 0.0                         # Local = gratuit
+            "gemini-2.5-flash": 0.000075 / 1000,
+            "gemini-2.5-pro": 0.0035 / 1000,
+            "grok-beta": 0.0,
+            "mistral": 0.0,
+            "llama2": 0.0
         }
         
         return cost_per_token.get(model, 0.0001) * tokens
@@ -239,64 +229,355 @@ class LocalMonitor:
         return filepath
 
 # ============================================================================
-# INTÉGRATION LANGFUSE (optionnel - pour plus tard)
+# INTÉGRATION LANGFUSE 3.13.0 + OPENTELEMETRY
 # ============================================================================
 
 class LangfuseMonitor:
-    """Wrapper pour Langfuse (observabilité avancée)."""
+    """Wrapper pour Langfuse 3.13.0 avec OpenTelemetry."""
     
     def __init__(self, session_id: str = "default"):
         self.session_id = session_id
         self.langfuse_available = False
-        
-        # Essayer d'importer Langfuse
+        self.langfuse = None
+        self.tracer = None  # OpenTelemetry Tracer
+    
+        logger.debug(f"🔧 Initialisation LangfuseMonitor pour session: {session_id}")
+    
+        # Vérifier que Langfuse est activé dans la config
+        if not config.monitoring.USE_LANGFUSE:
+            logger.warning("⚠️ Langfuse désactivé dans la configuration (USE_LANGFUSE=False)")
+            return
+    
+        # Vérifier les clés
+        if not config.monitoring.LANGFUSE_SECRET_KEY:
+            logger.warning("⚠️ LANGFUSE_SECRET_KEY manquante")
+            return
+    
+        if not config.monitoring.LANGFUSE_PUBLIC_KEY:
+            logger.warning("⚠️ LANGFUSE_PUBLIC_KEY manquante")
+            return
+    
+        logger.debug(f"🔧 Clés Langfuse présentes")
+    
+        # Essayer d'importer et d'initialiser
         try:
             from langfuse import Langfuse
-
-            # Utiliser le fichier config pour initialiser langfuse
+            from opentelemetry import trace
+            from opentelemetry.trace import StatusCode
+        
+            logger.info(f"🔧 Initialisation Langfuse 3.13.0 avec host: {config.monitoring.LANGFUSE_HOST}")
+        
             self.langfuse = Langfuse(
                 secret_key=config.monitoring.LANGFUSE_SECRET_KEY,
                 public_key=config.monitoring.LANGFUSE_PUBLIC_KEY,
                 host=config.monitoring.LANGFUSE_HOST
             )
-
+        
+            # Initialiser OpenTelemetry Tracer
+            self.tracer = trace.get_tracer("imt_chatbot")
+        
             self.langfuse_available = True
-            logger.info("✅ Langfuse initialisé (host: {config.monitoring.LANGFUSE_HOST})")
-        except ImportError:
-            logger.warning("⚠️ Langfuse non installé, Installez-le avec pip install Langfuse")
+            logger.info(f"✅ Langfuse 3.13.0 + OpenTelemetry initialisés")
+            logger.info(f"✅ Tracer OpenTelemetry: {self.tracer}")
+        
+        except ImportError as e:
+            logger.error(f"❌ ImportError Langfuse/OpenTelemetry: {e}")
         except Exception as e:
-            logger.warning(f"⚠️ Erreur Langfuse: {e}")
+            logger.error(f"❌ Erreur d'initialisation Langfuse: {e}")
     
-    def trace_llm_call(self, **kwargs):
-        """Trace un appel LLM avec Langfuse."""
-        if not self.langfuse_available:
-            return
+    def _create_span(self, span_name: str, attributes: Dict[str, Any], events: List[Dict] = None):
+        """Créer un span OpenTelemetry avec les attributs donnés."""
+        if not self.langfuse_available or not self.tracer:
+            return None
         
         try:
-            trace = self.langfuse.trace(
-                name="llm_call",
-                session_id=self.session_id,
-                metadata=kwargs.get("metadata", {})
-            )
+            from opentelemetry.trace import StatusCode
             
-            trace.generation(
-                name=kwargs.get("model", "unknown"),
-                input=kwargs.get("prompt", ""),
-                output=kwargs.get("response", ""),
-                metadata={
-                    "tokens_used": kwargs.get("tokens_used", 0),
-                    "duration_ms": kwargs.get("duration_ms", 0)
+            with self.tracer.start_as_current_span(span_name) as span:
+                # Ajouter les attributs de base
+                base_attrs = {
+                    "langfuse.session.id": self.session_id,
+                    "langfuse.project": "imt_chatbot",
+                    "project.name": "IMT Chatbot",
+                    "project.module": "brain",
+                    "environment": "development"
                 }
-            )
+                
+                # Fusionner avec les attributs spécifiques
+                all_attrs = {**base_attrs, **attributes}
+                span.set_attributes(all_attrs)
+                
+                # Ajouter les événements
+                if events:
+                    for event in events:
+                        span.add_event(event["name"], event.get("attributes", {}))
+                
+                # Marquer comme réussi
+                span.set_status(StatusCode.OK)
+                
+                # Créer un ID de trace Langfuse
+                if hasattr(self.langfuse, 'create_trace_id'):
+                    trace_id = self.langfuse.create_trace_id()
+                    span.set_attribute("langfuse.trace.id", trace_id)
+                    return trace_id
+            
+            return None
             
         except Exception as e:
-            logger.error(f"❌ Erreur Langfuse: {e}")
+            logger.error(f"❌ Erreur création span OpenTelemetry: {e}")
+            return None
+    
+    def log_llm_response(self, response: Any, duration_ms: float, prompt: str = ""):
+        """
+        Log une réponse LLM vers Langfuse via OpenTelemetry.
+        """
+        if not self.langfuse_available or not self.tracer:
+            logger.warning(f"⚠️ Langfuse/OpenTelemetry non disponible pour logging")
+            return
+    
+        try:
+            # Extraction des infos
+            if hasattr(response, 'text') and hasattr(response, 'model'):
+                text = response.text
+                model = response.model
+                tokens = 0
+            
+                if hasattr(response, 'usage') and response.usage:
+                    tokens = response.usage.get("total_tokens", 
+                        response.usage.get("completion_tokens", 0) + 
+                        response.usage.get("prompt_tokens", 0))
+                elif hasattr(response, 'tokens_used'):
+                    tokens = response.tokens_used
+            elif isinstance(response, str):
+                text = response
+                model = "unknown"
+                tokens = len(text.split())
+            else:
+                text = str(response)
+                model = "unknown"
+                tokens = 0
+
+            logger.info(f"📤 Envoi trace LLM OpenTelemetry: model={model}, duration={duration_ms}ms")
+        
+            # Créer le span avec tous les attributs
+            attributes = {
+                "llm.model": model,
+                "llm.provider": "gemini",
+                "llm.duration_ms": float(duration_ms),
+                "llm.tokens_used": tokens,
+                "llm.prompt_length": len(prompt) if prompt else 0,
+                "llm.response_length": len(text) if text else 0,
+            }
+            
+            events = [
+                {
+                    "name": "llm.generation.start",
+                    "attributes": {"timestamp": time.time()}
+                }
+            ]
+            
+            if prompt:
+                events.append({
+                    "name": "llm.prompt",
+                    "attributes": {
+                        "content": prompt[:300] + ("..." if len(prompt) > 300 else ""),
+                        "full_length": len(prompt)
+                    }
+                })
+            
+            if text:
+                events.append({
+                    "name": "llm.response",
+                    "attributes": {
+                        "content": text[:500] + ("..." if len(text) > 500 else ""),
+                        "full_length": len(text)
+                    }
+                })
+            
+            events.append({
+                "name": "llm.generation.end",
+                "attributes": {
+                    "timestamp": time.time(),
+                    "duration_ms": duration_ms,
+                    "success": True
+                }
+            })
+            
+            trace_id = self._create_span(
+                span_name="imt_chatbot_llm_call",
+                attributes=attributes,
+                events=events
+            )
+            
+            if trace_id:
+                logger.info(f"✅ Trace LLM OpenTelemetry envoyée: {model}, trace_id={trace_id[:12]}...")
+            
+            # Flush les données
+            self._flush_langfuse()
+    
+        except Exception as e:
+            logger.error(f"❌ Erreur OpenTelemetry log_llm_response: {e}", exc_info=True)
+    
+    def log_rag_search(self, query: str, results_count: int, duration_ms: float):
+        """
+        Log une recherche RAG vers Langfuse via OpenTelemetry.
+        """
+        if not self.langfuse_available or not self.tracer:
+            return
+    
+        try:
+            logger.info(f"🔍 Envoi trace RAG OpenTelemetry: '{query[:30]}...'")
+        
+            attributes = {
+                "rag.query": query[:100],
+                "rag.results_count": results_count,
+                "rag.duration_ms": float(duration_ms),
+                "component": "rag"
+            }
+            
+            events = [
+                {
+                    "name": "rag.search",
+                    "attributes": {
+                        "query": query[:200],
+                        "results_count": results_count
+                    }
+                }
+            ]
+            
+            trace_id = self._create_span(
+                span_name="imt_chatbot_rag_search",
+                attributes=attributes,
+                events=events
+            )
+            
+            if trace_id:
+                logger.info(f"✅ Trace RAG OpenTelemetry envoyée, trace_id={trace_id[:12]}...")
+            
+            self._flush_langfuse()
+        
+        except Exception as e:
+            logger.error(f"❌ Erreur RAG logging: {e}")
+    
+    def log_action(self, action_type: str, action_data: Dict, success: bool):
+        """
+        Log une action vers Langfuse via OpenTelemetry.
+        """
+        if not self.langfuse_available or not self.tracer:
+            return
+    
+        try:
+            logger.info(f"🎯 Envoi trace action OpenTelemetry: {action_type}")
+        
+            attributes = {
+                "action.type": action_type,
+                "action.success": success,
+                "component": "action"
+            }
+            
+            events = [
+                {
+                    "name": "action.execute",
+                    "attributes": {
+                        "type": action_type,
+                        "success": success,
+                        "data": str(action_data)[:200]  # Limité
+                    }
+                }
+            ]
+            
+            trace_id = self._create_span(
+                span_name="imt_chatbot_action",
+                attributes=attributes,
+                events=events
+            )
+            
+            if trace_id:
+                logger.info(f"✅ Trace action OpenTelemetry envoyée, trace_id={trace_id[:12]}...")
+            
+            self._flush_langfuse()
+        
+        except Exception as e:
+            logger.error(f"❌ Erreur action logging: {e}")
+    
+    def log_error(self, error_type: str, error_message: str, context: Dict = None):
+        """
+        Log une erreur vers Langfuse via OpenTelemetry.
+        """
+        if not self.langfuse_available or not self.tracer:
+            return
+    
+        try:
+            from opentelemetry.trace import StatusCode
+            
+            logger.error(f"❌ Envoi trace erreur OpenTelemetry: {error_type}")
+        
+            with self.tracer.start_as_current_span("imt_chatbot_error") as span:
+                # Attributs de base
+                span.set_attributes({
+                    "langfuse.session.id": self.session_id,
+                    "langfuse.project": "imt_chatbot",
+                    "error.type": error_type,
+                    "error.message": error_message[:500],
+                    "component": "error",
+                    "project.name": "IMT Chatbot",
+                    "environment": "development"
+                })
+                
+                # Ajouter le contexte si disponible
+                if context:
+                    span.add_event("error.context", {
+                        "data": str(context)[:200]
+                    })
+                
+                # Marquer comme erreur
+                span.set_status(StatusCode.ERROR, error_message)
+                
+                # ID de trace
+                if hasattr(self.langfuse, 'create_trace_id'):
+                    trace_id = self.langfuse.create_trace_id()
+                    span.set_attribute("langfuse.trace.id", trace_id)
+            
+            logger.info(f"✅ Trace erreur OpenTelemetry envoyée")
+            
+            self._flush_langfuse()
+        
+        except Exception as e:
+            logger.error(f"❌ Erreur error logging: {e}")
+    
+    def _flush_langfuse(self):
+        """Forcer l'envoi des données à Langfuse."""
+        try:
+            if hasattr(self.langfuse, 'flush'):
+                self.langfuse.flush()
+                logger.debug("🔄 Données flushées vers Langfuse")
+        except Exception as e:
+            logger.debug(f"ℹ️ Flush non disponible: {e}")
+    
+    # Méthodes de compatibilité pour le décorateur @trace_operation
+    def start_trace(self, event_type: ActionType, metadata: Dict = None):
+        """
+        Démarre une trace (pour compatibilité avec le décorateur).
+        Retourne un ID de trace temporaire.
+        """
+        trace_id = f"otel_{event_type.value}_{int(time.time() * 1000)}"
+        logger.debug(f"📝 Début trace OpenTelemetry: {trace_id}")
+        return trace_id
+    
+    def end_trace(self, trace_id: str, output_data: Dict = None, 
+                  error: str = None, tokens: int = None, cost: float = None,
+                  duration_ms: float = None):
+        """
+        Termine une trace (méthode factice pour compatibilité).
+        Les vraies traces sont envoyées directement via les méthodes spécifiques.
+        """
+        logger.debug(f"📝 Fin trace OpenTelemetry: {trace_id}")
 
 # ============================================================================
 # FACTORY
 # ============================================================================
 
-def get_monitor(session_id: str = "default", use_langfuse: bool = False):
+def get_monitor(session_id: str = "default", use_langfuse: bool = None):
     """
     Factory pour obtenir un moniteur.
     
@@ -309,15 +590,22 @@ def get_monitor(session_id: str = "default", use_langfuse: bool = False):
     """
     if use_langfuse is None:
         use_langfuse = config.monitoring.USE_LANGFUSE
-
+    
+    logger.info(f"🔧 Demande moniteur: session={session_id}, langfuse={use_langfuse}")
+    
     if use_langfuse:
         try:
             monitor = LangfuseMonitor(session_id)
             if monitor.langfuse_available:
+                logger.info("✅ LangfuseMonitor sélectionné")
                 return monitor
+            else:
+                logger.warning("⚠️ LangfuseMonitor non disponible, fallback local")
         except Exception as e:
-            logger.warning(f"⚠️ langfuse non disponible, fallback local:{e}")
+            logger.error(f"❌ Erreur création LangfuseMonitor: {e}")
     
+    # Fallback local
+    logger.info("📊 LocalMonitor sélectionné (fallback)")
     return LocalMonitor(session_id)
 
 # ============================================================================
@@ -432,37 +720,61 @@ def log_to_chainlit(message: str, level: str = "info"):
         ).send()
     except:
         pass  # Chainlit non disponible
-# Test
+
+# ============================================================================
+# TEST
+# ============================================================================
+
 if __name__ == "__main__":
-    print("📊 Test du monitoring...")
+    print("🧪 TEST LANGFUSE 3.13.0 + OPENTELEMETRY")
+    print("=" * 50)
     
-    monitor = LocalMonitor("test_session")
-    
-    # Simuler des traces
-    monitor.log_llm_call(
-        prompt="Bonjour",
-        response="Bonjour, comment puis-je vous aider ?",
-        model="gemini-2.5-flash",
-        tokens_used=150,
-        duration_ms=1200
+    # Test 1: LocalMonitor (fallback)
+    print("\n1. Test LocalMonitor (fallback):")
+    local_monitor = LocalMonitor("test_local")
+    local_monitor.log_llm_call(
+        prompt="Test local",
+        response="Réponse locale",
+        model="local-model",
+        tokens_used=100,
+        duration_ms=500
     )
     
-    monitor.log_rag_search(
-        query="frais de scolarité",
-        results_count=3,
-        duration_ms=450
-    )
+    # Test 2: LangfuseMonitor
+    print("\n2. Test LangfuseMonitor:")
+    langfuse_monitor = LangfuseMonitor("test_langfuse")
+    print(f"   Langfuse disponible: {langfuse_monitor.langfuse_available}")
+    print(f"   Tracer disponible: {langfuse_monitor.tracer is not None}")
     
-    monitor.log_error(
-        error_type="API Error",
-        error_message="Connection timeout",
-        context={"endpoint": "https://api.imt.sn"}
-    )
+    if langfuse_monitor.langfuse_available:
+        # Simuler une réponse LLM
+        class MockResponse:
+            text = "Ceci est un test OpenTelemetry avec Langfuse 3.13.0"
+            model = "gemini-2.5-flash-test"
+            usage = {"prompt_tokens": 20, "completion_tokens": 30}
+        
+        print("   📤 Envoi d'une trace OpenTelemetry...")
+        langfuse_monitor.log_llm_response(
+            response=MockResponse(),
+            duration_ms=750,
+            prompt="Test de l'API OpenTelemetry avec Langfuse"
+        )
+        print("   ✅ Trace envoyée (vérifie sur https://cloud.langfuse.com)")
+        
+        # Tester RAG
+        print("\n   🔍 Test trace RAG...")
+        langfuse_monitor.log_rag_search(
+            query="frais de scolarité IMT",
+            results_count=3,
+            duration_ms=450
+        )
+    else:
+        print("   ❌ Langfuse/OpenTelemetry non disponible")
     
-    # Afficher les stats
-    stats = monitor.get_session_stats()
-    print(f"\n📈 Statistiques:")
-    for key, value in stats.items():
-        print(f"  {key}: {value}")
+    # Test 3: Via factory
+    print("\n3. Test via get_monitor():")
+    factory_monitor = get_monitor("test_factory", use_langfuse=True)
+    print(f"   Type: {type(factory_monitor).__name__}")
+    print(f"   Langfuse disponible: {getattr(factory_monitor, 'langfuse_available', False)}")
     
-    print("\n✅ Test monitoring terminé")
+    print("\n✅ Tests monitoring terminés")

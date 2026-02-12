@@ -23,6 +23,7 @@ from .utils import (
     deserialize_from_redis,
     redis_key_builder
 )
+from .prompt_manager import prompt_manager
 
 # À venir - sera ajouté quand chain.py sera créé
 # from .chain import IMTConversationalChain, get_conversation_chain
@@ -55,6 +56,7 @@ __all__ = [
     "SYSTEM_IDENTITY",
     "format_conversation_history",
     "get_time_based_greeting",
+    "prompt_manager",
     
     # Utils
     "clean_text",

@@ -6,6 +6,7 @@ from langchain_community.chat_message_histories import RedisChatMessageHistory
 import json
 import os
 import warnings
+import langchain_community.chat_mssage 
 
 class MemoryManager:
     def __init__(self, session_id: str = "default", use_redis: bool = True, 
