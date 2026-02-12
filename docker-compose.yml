@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7
+    container_name: imt-redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  chainlit:
+    image: python:3.10-slim
+    container_name: imt-chainlit
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: >
+      sh -c "
+      pip install --upgrade pip &&
+      pip install -r requirements.txt &&
+      chainlit run app.py --host 0.0.0.0 --port 8000
+      "
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis

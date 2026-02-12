@@ -1,0 +1,492 @@
+/* ============================================
+   CHAINLIT CUSTOM THEME - Interface 3D Interactive
+   ============================================ */
+
+:root {
+  --primary-color: #6366f1;
+  --secondary-color: #8b5cf6;
+  --accent-color: #ec4899;
+  --bg-dark: #0f172a;
+  --bg-light: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border-color: rgba(148, 163, 184, 0.1);
+  --glow-color: rgba(99, 102, 241, 0.5);
+}
+
+/* ============================================
+   BODY & CONTAINER GLOBAL
+   ============================================ */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   CACHER LE LOGO CHAINLIT ORIGINAL
+   ============================================ */
+
+/* Cibler tous les logos Chainlit possibles */
+img[alt*="chainlit"],
+img[alt*="Chainlit"],
+img[src*="chainlit"],
+img[src*="/logo"],
+.MuiBox-root > img[src*="logo"],
+header img {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+}
+
+/* Cacher le texte "Chainlit" s'il existe */
+[class*="logo"] + span:contains("Chainlit"),
+[class*="Logo"] + span:contains("Chainlit") {
+  display: none !important;
+}
+
+/* Assurer que le robot est visible */
+.robot-logo-container {
+  display: inline-flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Canvas 3D Background */
+#three-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ============================================
+   STARTER MENU CUSTOMIZATION
+   ============================================ */
+
+.MuiPaper-root[class*="Starter"] {
+  background: rgba(30, 41, 59, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border-color);
+  border-radius: 24px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+              0 0 40px var(--glow-color);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.MuiPaper-root[class*="Starter"]:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6),
+              0 0 60px var(--glow-color);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* Starter Header */
+.MuiBox-root[class*="header"] {
+  background: linear-gradient(135deg, 
+    var(--primary-color) 0%, 
+    var(--secondary-color) 100%) !important;
+  border-radius: 20px 20px 0 0 !important;
+  padding: 24px !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.MuiBox-root[class*="header"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    transparent 30%, 
+    rgba(255, 255, 255, 0.1) 50%, 
+    transparent 70%);
+  animation: shimmer 3s infinite;
+}
+
+/* Starter Title */
+.MuiTypography-root[class*="title"] {
+  font-weight: 700 !important;
+  font-size: 28px !important;
+  color: white !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.5px;
+}
+
+/* Starter Options List */
+.MuiList-root {
+  padding: 16px !important;
+}
+
+.MuiListItemButton-root {
+  background: rgba(15, 23, 42, 0.4) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 16px !important;
+  margin-bottom: 12px !important;
+  padding: 16px 20px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.MuiListItemButton-root::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(99, 102, 241, 0.2), 
+    transparent);
+  transition: left 0.5s;
+}
+
+.MuiListItemButton-root:hover {
+  background: rgba(99, 102, 241, 0.15) !important;
+  border-color: var(--primary-color) !important;
+  transform: translateX(8px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+}
+
+.MuiListItemButton-root:hover::before {
+  left: 100%;
+}
+
+.MuiListItemText-primary {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+}
+
+.MuiListItemText-secondary {
+  color: var(--text-secondary) !important;
+  font-size: 14px !important;
+  margin-top: 4px !important;
+}
+
+/* ============================================
+   CHAT INTERFACE
+   ============================================ */
+
+/* Chat Container */
+.MuiBox-root[class*="chatContainer"] {
+  background: rgba(15, 23, 42, 0.6) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* Message Bubbles */
+.MuiPaper-root[class*="message"] {
+  background: rgba(30, 41, 59, 0.9) !important;
+  border: 1px solid var(--border-color);
+  border-radius: 18px !important;
+  backdrop-filter: blur(20px);
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+/* User Messages */
+.MuiPaper-root[class*="userMessage"] {
+  background: linear-gradient(135deg, 
+    var(--primary-color) 0%, 
+    var(--secondary-color) 100%) !important;
+  border: none !important;
+  color: white !important;
+}
+
+/* ============================================
+   INPUT STYLING - Style moderne glassmorphism
+   ============================================ */
+
+/* Container de l'input - effet glassmorphism */
+div:has(> textarea):has(> button),
+form {
+  background: rgba(30, 41, 59, 0.7) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(99, 102, 241, 0.2) !important;
+  border-radius: 24px !important;
+  padding: 12px 16px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+              0 0 40px rgba(99, 102, 241, 0.2) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+div:has(> textarea):has(> button):hover {
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6),
+              0 0 60px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Le textarea */
+textarea {
+  background: transparent !important;
+  color: #f1f5f9 !important;
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  border: none !important;
+  outline: none !important;
+  padding: 8px 12px !important;
+  resize: none !important;
+  width: 100% !important;
+  min-height: 50px !important;
+  max-height: 200px !important;
+}
+
+textarea::placeholder {
+  color: #94a3b8 !important;
+  opacity: 0.7 !important;
+  font-style: italic !important;
+}
+
+/* Bouton d'envoi - gradient moderne */
+button[aria-label*="send"],
+button[type="submit"] {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4) !important;
+}
+
+button[aria-label*="send"]:hover,
+button[type="submit"]:hover {
+  transform: scale(1.1) rotate(15deg) !important;
+  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.6),
+              0 0 40px rgba(139, 92, 246, 0.5) !important;
+}
+
+/* Bouton upload/attach */
+button[aria-label*="upload"],
+button[aria-label*="attach"] {
+  background: rgba(99, 102, 241, 0.1) !important;
+  color: #94a3b8 !important;
+  border: 1px solid rgba(99, 102, 241, 0.2) !important;
+  border-radius: 12px !important;
+  width: 40px !important;
+  height: 40px !important;
+  transition: all 0.3s ease !important;
+  margin-right: 8px !important;
+}
+
+button[aria-label*="upload"]:hover,
+button[aria-label*="attach"]:hover {
+  background: rgba(99, 102, 241, 0.2) !important;
+  color: #6366f1 !important;
+  transform: scale(1.05) !important;
+}
+
+/* Animation d'apparition */
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+div:has(> textarea):has(> button) {
+  animation: slideUpFade 0.6s ease-out !important;
+}
+
+/* ============================================
+   INPUT FIELD POSITIONING - EN BAS DE L'ÉCRAN
+   ============================================ */
+
+/* Espace en bas pour l'input fixe */
+body {
+  padding-bottom: 100px !important;
+}
+
+main {
+  padding-bottom: 100px !important;
+}
+
+/* Input Field */
+.MuiTextField-root {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border-radius: 20px !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.MuiTextField-root:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 20px var(--glow-color);
+}
+
+.MuiInputBase-input {
+  color: var(--text-primary) !important;
+}
+
+/* Send Button */
+.MuiIconButton-root[aria-label*="send"] {
+  background: linear-gradient(135deg, 
+    var(--primary-color), 
+    var(--secondary-color)) !important;
+  color: white !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiIconButton-root[aria-label*="send"]:hover {
+  transform: scale(1.1) rotate(15deg);
+  box-shadow: 0 8px 24px var(--glow-color);
+}
+
+/* ============================================
+   SCROLLBAR CUSTOMIZATION
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, 
+    var(--primary-color), 
+    var(--secondary-color));
+  border-radius: 10px;
+  border: 2px solid rgba(15, 23, 42, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, 
+    var(--secondary-color), 
+    var(--accent-color));
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* ============================================
+   LOADING STATES
+   ============================================ */
+
+.MuiCircularProgress-root {
+  color: var(--primary-color) !important;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+  .MuiPaper-root[class*="Starter"] {
+    border-radius: 16px !important;
+    margin: 12px !important;
+  }
+  
+  .MuiTypography-root[class*="title"] {
+    font-size: 24px !important;
+  }
+  
+  .MuiListItemButton-root {
+    padding: 12px 16px !important;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.glass-effect {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border-color);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, 
+    var(--primary-color), 
+    var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow {
+  box-shadow: 0 0 20px var(--glow-color),
+              0 0 40px var(--glow-color);
+}
