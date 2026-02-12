@@ -82,7 +82,7 @@ l’industrialisation via Docker
 
  
 
-Étudiant :Fallou Tague
+Étudiant : Fallou Tague
 
 École : IMT
 

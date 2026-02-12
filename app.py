@@ -5,7 +5,7 @@ from ui.components.starter_menu import get_starters
 from ui.memory.redis_memory import save_message, load_history
 
 
-# ✅ DÉCLARATION OFFICIELLE DES STARTERS (OBLIGATOIRE)
+#  DÉCLARATION OFFICIELLE DES STARTERS (OBLIGATOIRE)
 @cl.set_starters
 def starters():
     return get_starters()
@@ -13,13 +13,13 @@ def starters():
 
 @cl.on_chat_start
 async def start():
-    # 🔹 session_id persistant
+    #  session_id persistant
     session_id = cl.user_session.get("session_id")
     if not session_id:
         session_id = str(uuid.uuid4())
         cl.user_session.set("session_id", session_id)
 
-    # 🔹 Charger l'historique Redis
+    #  Charger l'historique Redis
     history = load_history(session_id)
 
     if history:
@@ -28,7 +28,7 @@ async def start():
                 content=msg["content"],
                 author="IMT Bot" if msg["role"] == "assistant" else "User"
             ).send()
-    # ⚠️ PAS de set_starters ici (Chainlit s’en charge automatiquement)
+    #  PAS de set_starters ici (Chainlit s’en charge automatiquement)
 
 
 @cl.on_message
