@@ -1,0 +1,9 @@
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+
+# vector store
+imt_faiss/
