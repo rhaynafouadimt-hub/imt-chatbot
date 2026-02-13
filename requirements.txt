@@ -36,3 +36,11 @@ tiktoken               # Comptage de tokens
 pytest
 pytest-asyncio
 black                  # Formattage
+
+# Scrapping and rag responses
+langchain-huggingface
+faiss-cpu
+langchain-core
+
+
+

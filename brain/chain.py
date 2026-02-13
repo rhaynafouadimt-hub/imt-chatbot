@@ -213,14 +213,25 @@ class IMTConversationalChain:
         return MockMemory()
     
     def _init_rag(self):
-        """Initialise le RAG (scraping - à intégrer depuis ami 2)."""
-        # Mock pour l'instant
-        class MockRAG:
-            def search(self, query, k=3):
-                logger.debug(f"[Mock] RAG recherche: {query}")
-                return [{"content": f"Info mock sur: {query}", "source": "mock"}]
+        """Initialise le RAG via le module de scraping_rag."""
+        try:
+            from scraping_rag.rag_imt import search_imt
         
-        return MockRAG()
+            class RAGClient:
+                def search(self, query, k=3):
+                    results = search_imt(query, k=k)
+                    # S'assurer que chaque résultat a une source
+                    for r in results:
+                        if r.get("source") == "inconnu":
+                            r["source"] = "Site IMT"  # ou laisse "inconnu"
+                    return results
+        
+            logger.info("✅ RAG initialisé avec scraping_rag")
+            return RAGClient()
+        
+        except ImportError as e:
+            logger.error(f"❌ RAG non disponible: {e}")
+            return self._init_mock_rag()
     
     def _init_actions(self):
         """Initialise les actions (email/form - à intégrer depuis ami 3)."""
