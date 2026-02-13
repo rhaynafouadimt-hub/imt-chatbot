@@ -234,18 +234,52 @@ class IMTConversationalChain:
             return self._init_mock_rag()
     
     def _init_actions(self):
-        """Initialise les actions (email/form - à intégrer depuis ami 3)."""
-        # Mock pour l'instant
-        class MockActions:
-            def send_email(self, to, subject, body):
-                logger.debug(f"[Mock] Email envoyé à: {to}")
-                return True
-            def fill_form(self, form_data):
-                logger.debug(f"[Mock] Formulaire rempli")
-                return True
+        """Initialise les actions (email, formulaire)."""
+        try:
+            from actions.email_action import send_email
+            from actions.form_action import submit_contact_form
         
-        return MockActions()
+            class ActionsClient:
+                def send_email(self, to, subject, body, sender_name=""):
+                    # Ajouter le nom de l'expéditeur dans le corps
+                    full_body = f"De: {sender_name}\n\n{body}"
+                    success = send_email(subject, full_body)
+                    return {
+                        "success": success,
+                        "message": "Email envoyé" if success else "Échec envoi"
+                    }
+            
+                def fill_form(self, form_data):
+                    # Transformer le dict en paramètres
+                    return submit_contact_form(
+                        first_name=form_data.get("prenom", ""),
+                        last_name=form_data.get("nom", ""),
+                        email=form_data.get("email", ""),
+                        phone=form_data.get("telephone", ""),
+                        question=form_data.get("question", ""),
+                        source="chatbot"
+                    )
+        
+            logger.info("✅ Actions initialisées avec action/")
+            return ActionsClient()
+        
+        except ImportError as e:
+            logger.error(f"❌ Actions non disponibles: {e}")
+            return self._init_mock_actions()
     
+    def _init_mock_actions(self):
+        """Fallback si les vraies actions ne sont pas disponibles."""
+        class MockActions:
+            def send_email(self, to, subject, body, sender_name=""):
+                logger.warning(f"⚠️ [MOCK] Email à {to}: {subject}")
+                return {"success": True, "message": "Mock envoyé"}
+        
+            def fill_form(self, form_data):
+                logger.warning(f"⚠️ [MOCK] Formulaire: {form_data}")
+                return {"success": True, "message": "Mock soumis"}
+    
+        return MockActions()
+
     def _is_potentially_malicious(self, text: str) -> bool:
         """Détecte les patterns dangereux avec des regex."""
         if not self.security_enabled:
